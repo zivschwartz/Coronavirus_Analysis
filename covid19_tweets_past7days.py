@@ -8,10 +8,10 @@ import pickle
 import datetime
 
 #import necessary keys from Twitter Developer API
-CONSUMER_KEY = 
+CONSUMER_KEY =
 CONSUMER_SECRET = 
 ACCESS_TOKEN = 
-ACCESS_TOKEN_SECRET = 
+ACCESS_TOKEN_SECRET =
 
 def metadata_df(search_api,hashtags,since,until, filename, lat_long_only=True):
     print('---------- COLLECTING TWEETS OF THE PREVIOUS WEEK FROM BEFORE '+until+' ----------')
@@ -108,9 +108,9 @@ if __name__ == "__main__":
     #collect tweets, results saved in pickle
     hashtags = '#coronavirus OR #covid19 -filter:retweets'
     #to get all the tweets in one day, since=today, until=tomorrow (even if in the future)
-    #TODAY IS MARCH 24 ==> 7 "days" before is since='2020-03-16', until '2020-03-24'
-    since = '2020-03-16'
-    until = '2020-03-24' #EXCLUSIVE, will get up to 2020-03-23's tweets
+    #TODAY IS MARCH 25 ==> 7 "days" before is since='2020-03-17', until '2020-03-25'
+    since = '2020-03-17'
+    until = '2020-03-25' #EXCLUSIVE, will get up to 2020-03-24's tweets
     pickle_name = 'past7days_before_'+until+'_tweets.pkl'
     metadata_df(api.search, hashtags, since=since,until=until, filename=pickle_name,lat_long_only=True)
 

@@ -46,7 +46,7 @@ def metadata_df(search_api,hashtags,since,until,filename,lat_long_only=True):
         #this just prints the tweets so we know the progress of pulling
         total_tweets += 1
         #print("Total tweets pulled: ",total_tweets,end='\r')
-        print("Tweets with valid latitude/longitude: ",latlong_tweets,end='\r')
+        print("Tweets with valid latitude/longitude: ",latlong_tweets, end ='\r')
         #display.clear_output(wait=True)
         
         #NOTE: this line ensures that we only return tweets with valid locations/latitudes + longitudes
@@ -76,7 +76,7 @@ def metadata_df(search_api,hashtags,since,until,filename,lat_long_only=True):
         
         latlong_tweets += 1
         #print("Total tweets pulled: ",total_tweets,end='\r')
-        print("Tweets with valid latitude/longitude: ",latlong_tweets,end='\r')
+        print("Tweets with valid latitude/longitude: ",latlong_tweets, end = '\r')
 
         # create and/or append this tweet to the dataframe
         df = df.append({'tweet_id':tweet.id,
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     hashtags = '#coronavirus OR #covid19 -filter:retweets'
     #to get all the tweets in one day, since=today, until=tomorrow (even if in the future)
     today = datetime.date.today().strftime("%Y-%m-%d") 
-    #want to collect all of YESTERDAY'S tweets (if we run this on March 25, we'll get all of March 24th's tweets)
+    #want to collect all of YESTERDAY'S tweets (if we run this on March 26, we'll get all of March 25th's tweets)
     yesterday = (datetime.date.today()-datetime.timedelta(1)).strftime("%Y-%m-%d") 
     pickle_name = yesterday+'_'+'tweets.pkl'
     metadata_df(api.search, hashtags, since=yesterday,until=today, filename=pickle_name,lat_long_only=True)
