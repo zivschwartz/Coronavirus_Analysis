@@ -38,38 +38,41 @@ def metadata_df(tweets, RT=False):
         if not RT: #if we don't want retweets
             if 'RT' in tweet['full_text']: continue
             
-        #first, get location (city) and country depending on what info is available
-        if tweet['place'] != None:
-            location = tweet['place']['full_name']
-            country = tweet['place']['country_code']
-            
-        else:
-            location = tweet['user']['location'] #if actual city doesn't exist, get location provided by the user
-            country = np.nan
-            
-        #get latitude and longitude depending on whether an exact location or bounding box is provided
-        if tweet['coordinates'] != None: #exact location
-            longitude, latitude = tweet['coordinates']['coordinates']
-            
-        elif tweet['place'] != None: #bounding box --> take center point (average) of box
-            bounding_box = np.array(tweet['place']['bounding_box']['coordinates'][0])
-            longitude, latitude = np.mean(bounding_box, axis=0)
-            
-        else: #no location provided --> make nan
-            longitude = np.nan
-            latitude = np.nan
+        try:
+            #first, get location (city) and country depending on what info is available
+            if tweet['place'] != None:
+                location = tweet['place']['full_name']
+                country = tweet['place']['country_code']
+                
+            else:
+                location = tweet['user']['location'] #if actual city doesn't exist, get location provided by the user
+                country = np.nan
+                
+            #get latitude and longitude depending on whether an exact location or bounding box is provided
+            if tweet['coordinates'] != None: #exact location
+                longitude, latitude = tweet['coordinates']['coordinates']
+                
+            elif tweet['place'] != None: #bounding box --> take center point (average) of box
+                bounding_box = np.array(tweet['place']['bounding_box']['coordinates'][0])
+                longitude, latitude = np.mean(bounding_box, axis=0)
+                
+            else: #no location provided --> make nan
+                longitude = np.nan
+                latitude = np.nan
 
-        #append this tweet to the dataframe
-        df = df.append({'tweet_id':tweet['id'],
-                        'created_at':tweet['created_at'],
-                        'user_id':tweet['user']['id'],
-                        'user_name':tweet['user']['screen_name'],
-                        'location':location,
-                        'country':country,
-                        'latitude':latitude,
-                        'longitude':longitude,
-                        'text':tweet['full_text'],
-                        }, ignore_index=True)
+            #append this tweet to the dataframe
+            df = df.append({'tweet_id':tweet['id'],
+                            'created_at':tweet['created_at'],
+                            'user_id':tweet['user']['id'],
+                            'user_name':tweet['user']['screen_name'],
+                            'location':location,
+                            'country':country,
+                            'latitude':latitude,
+                            'longitude':longitude,
+                            'text':tweet['full_text'],
+                            }, ignore_index=True)
+        except:
+            continue
 
     return df
 
