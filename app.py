@@ -149,7 +149,7 @@ app.layout = html.Div(children=[
     ),
 
     html.H4(
-    	children='Analyzing the spread and effect of the coronavirus across the world',
+    	children='Analyzing the spread and effect of the coronavirus',
     	style={
     		'textAlign': 'center'
     	}
