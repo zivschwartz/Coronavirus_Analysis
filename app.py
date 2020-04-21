@@ -134,6 +134,8 @@ fig.update_layout(
 
 ### BUILD DASHBOARD
 
+server = app.server
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -147,7 +149,7 @@ app.layout = html.Div(children=[
     ),
 
     html.H4(
-    	children='Analyzing the spread and effect of the coronavirus',
+    	children='Analyzing the spread and effect of the coronavirus across the world',
     	style={
     		'textAlign': 'center'
     	}
