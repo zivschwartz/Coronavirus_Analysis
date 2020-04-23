@@ -164,7 +164,7 @@ fig.update_layout(
     ))
 
 fig.update_layout(title='Normalized Stock Index')
-#fig.show()
+
 
 company_data_daily_normalized_stacked = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked['yyyy-mm-dd'] < '2020-04-01']
 
@@ -250,8 +250,8 @@ fig1.update_layout(
 
 fig1.update_layout(title='Hypothesized Stock Index') 
 
-# x_dates = list(x)
-# x_dates.reverse()
+x_dates = list(x)
+x_dates.reverse()
 
 
 ### BUILD DASHBOARD ###
@@ -277,13 +277,20 @@ app.layout = html.Div(children=[
     	}
     ),
 
-	# dcc.RangeSlider(
- #    	id='slider',
- #    	marks = {i : x_dates[i] for i in range(len(x_dates))},
- #    	min=0,
- #    	max=89,
- #    	value=[30,80]
-	# ),
+    html.P([
+        html.Label("Choose a time range"),
+        dcc.RangeSlider(
+            id='slider',
+            marks = {i : x_dates[i] for i in range(0,len(x_dates),10)},
+            min=0,
+            max=88,
+            value=[0,88]
+        )],
+        style = {'width' : '90%',
+                'fontSize' : '18px',
+                'padding-left' : '50px',
+                'display': 'inline-block'}),
+
 
 	dcc.Graph(
         id='industry-stock-graph',
@@ -307,99 +314,197 @@ app.layout = html.Div(children=[
     
 ])
 
-# @app.callback(
-#     Output('industry-stock-graph','figure'), 
-#     [Input('slider','value')]
-# )
+@app.callback(
+    Output('industry-stock-graph','figure'), 
+    [Input('slider','value')]
+)
 
-# def update_figure(input2):
-#     for c in company_data_daily_normalized_stacked.company_index.unique():
-#         df = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked.company_index==c]
-#         x = df["yyyy-mm-dd"]
-#         y= df['normalized_stock_price']
-#         industry = company_df.loc[company_df.company_index==c,'group'].values[0]
-#         hypothesis = company_df.loc[company_df.company_index==c,'hypothesis'].values[0]
-#         industry_plots.append(industry)
+def update_industry_figure(input2):
+    fig = go.Figure()
+    industry_plots = []
+    hypothesis_plots = []
+
+    for c in company_data_daily_normalized_stacked.company_index.unique():
+        df = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked.company_index==c]
+        x = df["yyyy-mm-dd"]
+        y= df['normalized_stock_price']
+        industry = company_df.loc[company_df.company_index==c,'group'].values[0]
+        hypothesis = company_df.loc[company_df.company_index==c,'hypothesis'].values[0]
+        industry_plots.append(industry)
         
-#         x2 = x[(x > x_dates[input2[0]]) & (x < x_dates[input2[1]])]
+        x2 = x[(x > x_dates[input2[0]]) & (x < x_dates[input2[1]])]
 
-#         fig.add_trace(go.Scatter(
-#         x=x2,
-#         y=y,
-#         name=company_df.loc[company_df.company_index==c,'company'].values[0],
-#         line=dict(color=industry_colors[industry]),
-#         mode='lines',
-#         hovertemplate=
-#             ('%s (%s) <br><br>Industry: %s <br>Hypothesis: %s' %(company_df.loc[company_df.company_index==c, 'company'].values[0], c, industry, hypothesis))
-#                  ))
-#         # Add range slider
+        fig.add_trace(go.Scatter(
+        x=x2,
+        y=y,
+        name=company_df.loc[company_df.company_index==c,'company'].values[0],
+        line=dict(color=industry_colors[industry]),
+        mode='lines',
+        hovertemplate=
+            ('%s (%s) <br><br>Industry: %s <br>Hypothesis: %s' %(company_df.loc[company_df.company_index==c, 'company'].values[0], c, industry, hypothesis))
+                 ))
 
-#     # Add range slider
-#     fig.update_layout(
-#         yaxis=dict(
-#            autorange = True,
-#            fixedrange= False
-#        ),
-#         xaxis=dict(
-#             rangeselector=dict(
-#                 buttons=list([
-#                     dict(count=1,
-#                          label="1m",
-#                          step="month",
-#                          stepmode="backward"),
-#                     dict(count=6,
-#                          label="6m",
-#                          step="month",
-#                          stepmode="backward"),
-#                     dict(count=1,
-#                          label="YTD",
-#                          step="year",
-#                          stepmode="todate"),
-#                     dict(count=1,
-#                          label="1y",
-#                          step="year",
-#                          stepmode="backward"),
-#                     dict(step="all")
-#                 ])
-#             ),
-#             rangeslider=dict(
-#                 visible=True
-#             ),
-#             type="date"
-#         )
-#     )
+    # Add range slider
+    fig.update_layout(
+        yaxis=dict(
+           autorange = True,
+           fixedrange= False
+       ),
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1,
+                         label="1m",
+                         step="month",
+                         stepmode="backward"),
+                    dict(count=6,
+                         label="6m",
+                         step="month",
+                         stepmode="backward"),
+                    dict(count=1,
+                         label="YTD",
+                         step="year",
+                         stepmode="todate"),
+                    dict(count=1,
+                         label="1y",
+                         step="year",
+                         stepmode="backward"),
+                    dict(step="all")
+                ])
+            ),
+            rangeslider=dict(
+                visible=True
+            ),
+            type="date"
+        )
+    )
 
-#     industry_layout = [dict(label = 'All',
-#                       method = 'update',
-#                       args = [{'visible': [True for i in range(len(industry_plots))]},
-#                               {'title': 'All',
-#                                'showlegend':True}])]
-#     for ind in company_df.group.unique():
-#         ind_dict = dict(label = ind, method = 'update',
-#           args = [{'visible': [True if ind == i else False for i in industry_plots]}, # the index of True aligns with the indices of plot traces
-#                   {
-#                    'showlegend':True}])
-#         industry_layout.append(ind_dict)
-
-
-#     fig.update_layout(
-#         updatemenus=[go.layout.Updatemenu(
-#             active=0,
-#             buttons=list(industry_layout)
-#             )
-#         ])
+    industry_layout = [dict(label = 'All',
+                      method = 'update',
+                      args = [{'visible': [True for i in range(len(industry_plots))]},
+                              {'title': 'All',
+                               'showlegend':True}])]
+    for ind in company_df.group.unique():
+        ind_dict = dict(label = ind, method = 'update',
+          args = [{'visible': [True if ind == i else False for i in industry_plots]}, # the index of True aligns with the indices of plot traces
+                  {
+                   'showlegend':True}])
+        industry_layout.append(ind_dict)
 
 
-#     fig.update_layout(
-#         hoverlabel=dict(
-#             bgcolor="white",
-#             font_size=16,
-#             font_family="Rockwell"
-#         )
-#     )
+    fig.update_layout(
+        updatemenus=[go.layout.Updatemenu(
+            active=0,
+            buttons=list(industry_layout)
+            )
+        ])
 
 
-#     return fig
+    fig.update_layout(
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=16,
+            font_family="Rockwell"
+        )
+    )
+
+    fig.update_layout(title='Normalized Stock Index')
+
+    return fig
+
+
+@app.callback(
+    Output('hypothesis-stock-graph','figure'), 
+    [Input('slider','value')]
+)
+
+def update_hypothesis_figure(input2):
+    fig1 = go.Figure()
+    industry_plots = []
+    hypothesis_plots = []
+
+    for c in company_data_daily_normalized_stacked.company_index.unique():
+        df = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked.company_index==c]
+        x = df["yyyy-mm-dd"]
+        y= df['normalized_stock_price']
+        industry = company_df.loc[company_df.company_index==c,'group'].values[0]
+        industry_plots.append(industry)
+        hypothesis = company_df.loc[company_df.company_index==c,'hypothesis'].values[0]
+        hypothesis_plots.append(hypothesis)
+
+        x2 = x[(x > x_dates[input2[0]]) & (x < x_dates[input2[1]])]
+
+
+        fig1.add_trace(go.Scatter(
+        x=x2,
+        y=y,
+        name=company_df.loc[company_df.company_index==c,'company'].values[0],
+        line=dict(color=hypothesis_colors[hypothesis]),
+        mode='lines',
+        hovertemplate=
+            ('%s (%s) <br><br>Industry: %s <br>Hypothesis: %s' %(company_df.loc[company_df.company_index==c, 'company'].values[0], c, industry, hypothesis))
+                     ))
+
+
+    # Add range slider
+    fig1.update_layout(
+        yaxis=dict(
+           autorange = True,
+           fixedrange= False
+       ),
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1,
+                         label="1m",
+                         step="month",
+                         stepmode="backward"),
+                    dict(count=6,
+                         label="6m",
+                         step="month",
+                         stepmode="backward"),
+                    dict(count=1,
+                         label="YTD",
+                         step="year",
+                         stepmode="todate"),
+                    dict(count=1,
+                         label="1y",
+                         step="year",
+                         stepmode="backward"),
+                    dict(step="all")
+                ])
+            ),
+            rangeslider=dict(
+                visible=True
+            ),
+            type="date"
+        )
+    )
+
+
+    hypothesis_layout = [dict(label = 'All',
+                      method = 'update',
+                      args = [{'visible': [True for i in range(len(hypothesis_plots))]},
+                              {'title': 'All',
+                               'showlegend':True}])]
+
+    for hyp in company_df.hypothesis.unique():
+        hyp_dict = dict(label = hyp, method = 'update',
+          args = [{'visible': [True if hyp == i else False for i in hypothesis_plots]}, # the index of True aligns with the indices of plot traces
+                  {
+                   'showlegend':True}])
+        hypothesis_layout.append(hyp_dict)
+
+    fig1.update_layout(
+        updatemenus=[go.layout.Updatemenu(
+            active=0,
+            buttons=list(hypothesis_layout)
+            )
+        ])
+
+    fig1.update_layout(title='Hypothesized Stock Index') 
+
+    return fig1
     
 
 if __name__ == '__main__':
