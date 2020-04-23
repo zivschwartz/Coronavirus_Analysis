@@ -253,6 +253,9 @@ fig1.update_layout(title='Hypothesized Stock Index')
 x_dates = list(x)
 x_dates.reverse()
 
+slide_marks = {i : x_dates[i] for i in range(0,len(x_dates),10)}
+slide_marks[88] = x_dates[88]
+
 
 ### BUILD DASHBOARD ###
 
@@ -281,14 +284,14 @@ app.layout = html.Div(children=[
         html.Label("Choose a time range"),
         dcc.RangeSlider(
             id='slider',
-            marks = {i : x_dates[i] for i in range(0,len(x_dates),10)},
+            marks = slide_marks,
             min=0,
             max=88,
             value=[0,88]
         )],
-        style = {'width' : '90%',
+        style = {'width' : '100%',
                 'fontSize' : '18px',
-                'padding-left' : '50px',
+                'padding-left' : '10px',
                 'display': 'inline-block'}),
 
 
@@ -313,6 +316,9 @@ app.layout = html.Div(children=[
     	'''),
     
 ])
+
+
+### Plot RangeSlider Callbacks ###
 
 @app.callback(
     Output('industry-stock-graph','figure'), 
