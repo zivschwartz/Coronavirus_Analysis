@@ -4,23 +4,51 @@ import dash_html_components as html
 import plotly.graph_objects as go
 import plotly.express as px
 from dash.dependencies import Input, Output
+from geopy.geocoders import Nominatim
+import gmplot
 import pandas as pd
 import numpy as np
 
-company_data_monthly = pd.read_csv('company_financial_data_41.csv')
-company_df = pd.read_csv('company_for_priceindex.xls')
 
-def generate_table(dataframe):
-    return html.Table([
-        html.Thead(
-            html.Tr([html.Th(col) for col in dataframe.columns])
-        ),
-        html.Tbody([
-            html.Tr([
-                html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-            ]) for i in range(len(dataframe))
-        ])
-    ])
+### cases data ###
+
+total_cases = pd.read_csv('total_cases.csv')
+full_data = pd.read_csv('full_data.csv')
+by_country = full_data[full_data.location != 'World']
+
+geolocator = Nominatim()
+
+# Go through all records and get lat long of city if exact coordinate not provided
+coordinates = pd.DataFrame(columns=['country','latitude','longitude'])
+i = 0
+for country in by_country.location.unique():
+        try:
+            loc = geolocator.geocode(country)
+            if not np.isnan(loc.latitude) and not np.isnan(loc.longitude):
+                coordinates.loc[i] = [country, loc.latitude, loc.longitude]
+                i = i+1
+        except:
+            continue
+    
+# Instantiate and center a GoogleMapPlotter object to show our map
+gmap = gmplot.GoogleMapPlotter(30, 0, 3)
+
+total_cases = by_country.merge(pd.DataFrame(coordinates), how='left', left_on='location', right_on='country')
+total_cases = total_cases.drop('country',1)
+total_cases = total_cases.dropna()
+total_cases = total_cases.sort_values(by='date')
+total_cases = total_cases[total_cases.location != 'International']
+
+date_range = total_cases[(total_cases.date <= '2020-03-31') & (total_cases.date >= '2020-01-02')]
+cases_fig = px.scatter_geo(date_range, lat="latitude", lon='longitude', color="new_cases",
+                     hover_name="location", size="new_cases",size_max=50,
+                     animation_frame="date", center={'lat': 34, 'lon': 9},height=600)
+
+
+
+### stock data ###
+company_data_monthly = pd.read_csv('company_financial_data_filled_in.csv')
+company_df = pd.read_csv('company_for_priceindex.xls')
 
 financial_indicators = company_data_monthly.sort_values('yyyy-mm-dd')
 for comp in company_data_monthly.columns.tolist()[1:]:
@@ -75,7 +103,10 @@ colors = ['red', 'orange', 'yellow', 'green', 'powderblue', 'blue', 'magenta', '
 industry_colors = {company_df.group.unique()[i]: colors[i] for i in range(len(company_df.group.unique()))}
 
 # Create figure
-company_data_daily_normalized_stacked = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked['yyyy-mm-dd'] < '2020-04-01']
+#company_data_daily_normalized_stacked = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked['yyyy-mm-dd'] < '2020-04-01']
+company_data_daily_normalized_stacked = company_data_daily_normalized_stacked[
+    (company_data_daily_normalized_stacked['yyyy-mm-dd'] <= '2020-03-31') 
+    & (company_data_daily_normalized_stacked['yyyy-mm-dd'] >= '2020-01-01')]
 
 fig = go.Figure()
 industry_plots = []
@@ -166,7 +197,7 @@ fig.update_layout(
 fig.update_layout(title='Normalized Stock Index')
 
 
-company_data_daily_normalized_stacked = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked['yyyy-mm-dd'] < '2020-04-01']
+#company_data_daily_normalized_stacked = company_data_daily_normalized_stacked.loc[company_data_daily_normalized_stacked['yyyy-mm-dd'] < '2020-04-01']
 
 fig1 = go.Figure()
 industry_plots = []
@@ -250,11 +281,9 @@ fig1.update_layout(
 
 fig1.update_layout(title='Hypothesized Stock Index') 
 
-x_dates = list(x)
-x_dates.reverse()
 
+x_dates = list(x)
 slide_marks = {i : x_dates[i] for i in range(0,len(x_dates),10)}
-slide_marks[88] = x_dates[88]
 
 
 ### BUILD DASHBOARD ###
@@ -286,13 +315,17 @@ app.layout = html.Div(children=[
             id='slider',
             marks = slide_marks,
             min=0,
-            max=88,
-            value=[0,88]
+            max=90,
+            value=[0,90]
         )],
         style = {'width' : '100%',
                 'fontSize' : '18px',
-                'padding-left' : '10px',
                 'display': 'inline-block'}),
+
+    dcc.Graph(
+        id='total-cases-graph',
+        figure=cases_fig
+    ),
 
 
 	dcc.Graph(
@@ -319,6 +352,23 @@ app.layout = html.Div(children=[
 
 
 ### Plot RangeSlider Callbacks ###
+
+@app.callback(
+    Output('total-cases-graph','figure'), 
+    [Input('slider','value')]
+)
+
+def update_cases_figure(input2):
+    date_list = list(total_cases[(total_cases.date <= '2020-03-31') & (total_cases.date >= '2020-01-01')].date.unique())
+    date_range = total_cases[(total_cases.date <= date_list[input2[1]]) & (total_cases.date >= date_list[input2[0]])]
+
+    cases_fig = px.scatter_geo(date_range, lat="latitude", lon='longitude', color="new_cases",
+                         hover_name="location", size="new_cases",size_max=50,
+                         animation_frame="date", center={'lat': 34, 'lon': 9},height=600)
+    
+    cases_fig.update_layout(title = 'New COVID-19 Cases Reported per Day')
+    
+    return cases_fig
 
 @app.callback(
     Output('industry-stock-graph','figure'), 
@@ -511,6 +561,9 @@ def update_hypothesis_figure(input2):
     fig1.update_layout(title='Hypothesized Stock Index') 
 
     return fig1
+
+
+
     
 
 if __name__ == '__main__':
