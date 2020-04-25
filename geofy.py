@@ -5,8 +5,8 @@ import sys
 import time
 
 masterdf = pd.read_csv('GeopyCleanedTweets/geopy-cleaned-tweets.csv')
-masterdf = masterdf[masterdf['clean']!='']
-masterl = set(list(masterdf['clean'].unique()))
+# masterdf = masterdf[masterdf['clean']!='']
+masterl = set(list(masterdf['unclean'].unique()))
 
 date = str(sys.argv[-1])
 GEOLOCATOR = Nominatim(user_agent='coronavirus-analysis')
@@ -30,4 +30,5 @@ togeofy = (set(list(testdf['location'].unique()))).difference(masterl)
 print(f'Length of set after consulting master: {len(togeofy)}')
 geofy(togeofy)
 df = pd.DataFrame(d, columns=['unclean','clean'])
-df.to_csv('GeopyCleanedTweets/geopy-cleaned-tweets.csv', mode='a', index=False, header=True)
+df.to_csv(f'GeopyCleanedTweets/{date}-geopy-cleaned-tweets.csv', index=False)
+# df.to_csv(f'GeopyCleanedTweets/geopy-cleaned-tweets.csv', mode='a', index=False, header=True)
