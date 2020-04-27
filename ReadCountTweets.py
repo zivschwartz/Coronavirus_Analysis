@@ -6,6 +6,14 @@ from geopy.geocoders import Nominatim
 from country_list import countries_for_language
 pd.set_option('display.max_rows',100)
 
+master = pd.read_csv('GeopyCleanedTweets/geopy-cleaned-tweets.csv')
+masterd = dict(zip(master['unclean'],master['clean']))
+countrycodes = pd.read_csv('countrycodes.csv')
+countrycodes = dict(zip(countrycodes['Code'],countrycodes['Country']))
+countrycodes['NA'] = 'Namibia'
+del countrycodes[np.nan]
+countrycodes = {k.lower(): v.lower() for k,v in countrycodes.items()}
+
 pd.DataFrame(columns=['date','country','count']).to_csv('tweetcounts.csv',index=False)
 S3 = boto3.resource('s3')
 BUCKET = 'coronavirus-analysis'
@@ -60,8 +68,12 @@ for fn in fns:
     counts = []
     cleaned = df[df['location'].isin(countries)]
     dirty = df[~df['location'].isin(countries)]
-    dirty.to_pickle(f'./DirtyTweets/{date}-dirty-tweets.pkl')
-    items = list(map(list, dict(cleaned['location'].value_counts()).items()))
+    dirty['location'] = dirty['location'].map(masterd).fillna('')
+    dirty = dirty[dirty['location']!='']
+    final = cleaned.append(dirty)
+    final['location'] = final['location'].replace('united states of america','united states')
+#     dirty.to_pickle(f'./DirtyTweets/{date}-dirty-tweets.pkl')
+    items = list(map(list, dict(final['location'].value_counts()).items()))
     dfcount = []
     for i in items:
         dated = [date]+[j for j in i]
