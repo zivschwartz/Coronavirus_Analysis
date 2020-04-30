@@ -5,7 +5,6 @@ import sys
 import time
 
 masterdf = pd.read_csv('GeopyCleanedTweets/geopy-cleaned-tweets.csv')
-# masterdf = masterdf[masterdf['clean']!='']
 masterl = set(list(masterdf['unclean'].unique()))
 
 date = str(sys.argv[-1])
