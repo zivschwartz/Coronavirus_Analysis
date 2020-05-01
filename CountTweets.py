@@ -2,6 +2,7 @@ import pickle
 import boto3
 import numpy as np
 import pandas as pd
+from time import time
 from geopy.geocoders import Nominatim
 from country_list import countries_for_language
 pd.set_option('display.max_rows',100)
