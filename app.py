@@ -46,6 +46,17 @@ cases_fig = px.scatter_geo(date_range, lat="latitude", lon='longitude', color="n
 
 
 
+### Twitter Counts ###
+counts = pd.read_csv('tweetcounts.csv')
+
+tw_date_range = counts[(counts.date >='2020-01-01')&(counts.date <='2020-03-31')]
+gmap = gmplot.GoogleMapPlotter(30, 0, 3)
+tw_fig = px.scatter_geo(tw_date_range, color="count", locations='country', locationmode='country names',
+                     hover_name="country", size="count",size_max=50,
+                     animation_frame="date", center={'lat': 34, 'lon': 9},height=600)
+
+
+
 ### stock data ###
 company_data_monthly = pd.read_csv('company_financial_data_filled_in.csv')
 company_df = pd.read_csv('company_for_priceindex.xls')
@@ -327,15 +338,30 @@ app.layout = html.Div(children=[
         figure=cases_fig
     ),
 
+    dcc.Markdown('''
+        This graph shows the spread of new COVID-19 cases by day across the world from 
+        Jan. 1, 2020 and March 31, 2020. 
+        '''),
+
+    dcc.Graph(
+        id='tweet-ct-graph',
+        figure=tw_fig
+    ),
+
+    dcc.Markdown('''
+        This graph shows the quantity of users on Twitter tweeting about COVID-19 
+        around the world between Jan. 1, 2020 and March 31, 2020. 
+        '''),
+
 
 	dcc.Graph(
         id='industry-stock-graph',
         figure = fig
     ),
 
-    dcc.Markdown('''
-    	The above graph shows the normalized stock indices for different companies from around Thanksgiving
-    	to the end of March.
+    dcc.Markdown('''This graph shows the normalized stock indices for different companies between 
+        Jan. 1, 2020 and March 31, 2020. The dropdown menu allows to subset the companies
+        by industry and the range slider allows for smaller window analysis.
     	'''),
 
     dcc.Graph(
@@ -343,15 +369,19 @@ app.layout = html.Div(children=[
         figure = fig1
     ),
 
-    dcc.Markdown('''
-    	The above graph shows the normalized stock indices for different companies from around Thanksgiving
-    	to the end of March in which we hypothesized would either increase or decrease.
-    	'''),
+    dcc.Markdown('''This graph shows the normalized stock indices for different companies between 
+        Jan. 1, 2020 and March 31, 2020. The difference in this graph is that it shows our teams hypothesis 
+        for how different companies would fare duing the pandemic: increase or decrease stock.
+        The dropdown menu can show explicitly which companies we hypothesized to increase or decrease 
+        on a smaller window analysis.
+    	''')
     
 ])
 
 
 ### Plot RangeSlider Callbacks ###
+
+# plot 1 callback
 
 @app.callback(
     Output('total-cases-graph','figure'), 
@@ -369,6 +399,30 @@ def update_cases_figure(input2):
     cases_fig.update_layout(title = 'New COVID-19 Cases Reported per Day')
     
     return cases_fig
+
+# plot 2 callback
+
+@app.callback(
+    Output('tweet-ct-graph','figure'), 
+    [Input('slider','value')]
+)
+
+def update_tw_figure(input2):
+    date_list = []
+    for i in pd.date_range(start="2020-01-01",end="2020-03-31"):
+        date_list.append(i.strftime("%Y-%m-%d"))
+
+    date_range = counts[(counts.date <= date_list[input2[1]]) & (counts.date >= date_list[input2[0]])]
+
+    tw_fig = px.scatter_geo(date_range, color="count", locations='country', locationmode='country names',
+                                hover_name="country", size="count",size_max=50,
+                                animation_frame="date", center={'lat': 34, 'lon': 9},height=600)
+
+    tw_fig.update_layout(title = 'Daily COVID-19 Tweets')
+    
+    return tw_fig
+
+# plot 3 callback
 
 @app.callback(
     Output('industry-stock-graph','figure'), 
@@ -468,6 +522,7 @@ def update_industry_figure(input2):
 
     return fig
 
+# plot 4 callback
 
 @app.callback(
     Output('hypothesis-stock-graph','figure'), 
@@ -563,8 +618,6 @@ def update_hypothesis_figure(input2):
     return fig1
 
 
-
-    
 
 if __name__ == '__main__':
     app.run_server(debug=True)
